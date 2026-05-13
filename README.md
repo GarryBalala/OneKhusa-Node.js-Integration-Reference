@@ -44,8 +44,8 @@ PaymentFactory.create() → Customized payment object with specific behavior
 src/
 ├── services/
 │   ├── onekhusa.service.js         # Hosted checkout logic
-│   ├── disbursement.service.js     # Payout operations
-│   └── webhook.service.js          # Webhook handlers
+│── disbursement.service.js         # Payout operations
+│
 ├── app.js                           # Express server
 ├── config.js                        # Environment setup
 └── utils.js                         # Helper functions
@@ -567,7 +567,6 @@ After understanding this guide, review these files in the project:
 | File | Purpose |
 |------|---------|
 | `src/services/onekhusa.service.js` | OneKhusa API integration |
-| `src/services/webhook.service.js` | Webhook handling |
 | `src/app.js` | Express routes and middleware |
 | `public/index.html` | Frontend example |
 | `.env.example` | Template for environment variables |
