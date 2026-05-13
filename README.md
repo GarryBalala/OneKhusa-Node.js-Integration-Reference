@@ -42,8 +42,6 @@ PaymentFactory.create() → Customized payment object with specific behavior
 
 ```
 src/
-├── factories/
-│   └── paymentFactory.js           # Creates payment operations
 ├── services/
 │   ├── onekhusa.service.js         # Hosted checkout logic
 │   ├── disbursement.service.js     # Payout operations
@@ -568,7 +566,6 @@ After understanding this guide, review these files in the project:
 
 | File | Purpose |
 |------|---------|
-| `src/factories/paymentFactory.js` | Complete factory implementation |
 | `src/services/onekhusa.service.js` | OneKhusa API integration |
 | `src/services/webhook.service.js` | Webhook handling |
 | `src/app.js` | Express routes and middleware |
