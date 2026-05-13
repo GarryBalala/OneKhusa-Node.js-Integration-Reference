@@ -4,107 +4,109 @@ A professional, full-stack reference implementation for the **OneKhusa Payment G
 
 ---
 
-## 📖 What This Project Does
+## 📖 Overview
 
-This repository provides a complete blueprint for integrating with OneKhusa's payment platform. It covers three core use cases:
+This repository provides a complete blueprint for integrating OneKhusa payment services into your Node.js application. It covers:
 
-1. **Collections (Payments)** - Accept payments from customers through a hosted checkout interface
-2. **Single Disbursements** - Send instant payouts to individuals or merchants
-3. **Batch Disbursements** - Process bulk payments efficiently using file uploads
+- **Payment Collections** - Accept payments through hosted checkout
+- **Single Disbursements** - Send instant payouts to recipients
+- **Batch Disbursements** - Process bulk payments from files
+- **Real-time Webhooks** - Receive payment notifications instantly
+- **Local Testing** - Full webhook testing using NGrok
 
-The architecture uses the **Object Factory Pattern**, which promotes clean code, testability, and extensibility.
+The architecture uses the **Object Factory Pattern** for clean, maintainable code that's easy to extend and test.
 
 ---
 
 ## 🏗️ Architecture Overview
 
-### Why the Object Factory Pattern?
+### Why Object Factory Pattern?
 
-The factory pattern solves a critical challenge in payment processing: different payment operations have different requirements, but they share common characteristics (API credentials, error handling, validation). By using factories, we:
+```
+Traditional Approach:
+new Payment(config) → Payment object with fixed behavior
 
-- **Reduce code duplication** - Common logic exists in one place
-- **Improve maintainability** - Changes to payment logic only need to happen once
-- **Enable easy testing** - Each operation type can be tested independently
-- **Support future extensions** - Adding new payment types requires minimal code changes
+Factory Pattern:
+PaymentFactory.create() → Customized payment object with specific behavior
+```
+
+**Benefits:**
+- ✅ Centralized creation logic - Easy to maintain
+- ✅ Consistent error handling - Same approach everywhere
+- ✅ Easy to test - Each operation independent
+- ✅ Simple to extend - Add new payment types without refactoring
 
 ---
 
 ## 📂 Project Structure
 
-```text
-onekhusa-nodejs-integration/
-├── public/
-│   └── index.html                    # Frontend Dashboard UI
-├── src/
-│   ├── factories/
-│   │   └── paymentFactory.js        # Factory for payment operations
-│   ├── services/
-│   │   ├── onekhusa.service.js      # Hosted checkout logic
-│   │   ├── disbursement.service.js  # Disbursement operations
-│   │   └── webhook.service.js       # Webhook handling
-│   ├── app.js                        # Express server & routes
-│   ├── config.js                     # Environment configuration
-│   └── utils.js                      # Utility functions
-├── .env                              # Local configuration (DO NOT commit)
-├── .gitignore
-└── package.json
+```
+src/
+├── factories/
+│   └── paymentFactory.js           # Creates payment operations
+├── services/
+│   ├── onekhusa.service.js         # Hosted checkout logic
+│   ├── disbursement.service.js     # Payout operations
+│   └── webhook.service.js          # Webhook handlers
+├── app.js                           # Express server
+├── config.js                        # Environment setup
+└── utils.js                         # Helper functions
+
+public/
+└── index.html                       # Dashboard UI
+
+.env                                 # Your secrets (never commit!)
+package.json                         # Dependencies
 ```
 
 ---
 
-## 🛠️ Phase 1: Preparation & Prerequisites
+## 🛠️ Step 1: Prerequisites
 
-### What You Need
+### Requirements
 
-- **Node.js** (v14+) - `node --version`
-- **npm** - `npm --version`
-- **Git** - `git --version`
-- **NGrok** (for local webhook testing) - Download from https://ngrok.com
-- **OneKhusa Merchant Account** - Sandbox credentials
+- **Node.js** v14+ ([Download](https://nodejs.org))
+- **npm** (comes with Node.js)
+- **Git** ([Download](https://git-scm.com))
+- **NGrok** ([Download](https://ngrok.com)) - for webhook testing
+- **OneKhusa Sandbox Credentials** - from your merchant dashboard
 
-### Verify Your Setup
+### Verify Installation
 
 ```bash
-node --version
+node --version      # Should be v14+
 npm --version
 git --version
 ngrok --version
 ```
 
-All commands should display version numbers without errors.
-
 ---
 
-## 📥 Phase 2: Project Setup
+## 📥 Step 2: Setup Your Project
 
-### Step 1: Clone the Repository
+### Clone and Install
 
 ```bash
 git clone https://github.com/GarryBalala/OneKhusa-Node.js-Integration-Reference.git
 cd OneKhusa-Node.js-Integration-Reference
-```
-
-### Step 2: Install Dependencies
-
-```bash
 npm install
 ```
 
-**Expected:** Installation completes in 30-60 seconds with no errors.
+### Configure Environment Variables
 
-### Step 3: Create `.env` Configuration File
+Create `.env` file in the root:
 
 ```bash
 touch .env
 ```
 
-Add these variables to your `.env`:
+Add these variables:
 
 ```env
-# OneKhusa API Credentials
-ONEKHUSA_API_KEY=your_sandbox_api_key
-ONEKHUSA_API_SECRET=your_sandbox_api_secret
-ONEKHUSA_ORG_ID=your_organisation_id
+# OneKhusa Sandbox Credentials
+ONEKHUSA_API_KEY=your_api_key_here
+ONEKHUSA_API_SECRET=your_api_secret_here
+ONEKHUSA_ORG_ID=your_org_id
 ONEKHUSA_MERCHANT_NUMBER=79619974
 ONEKHUSA_CAPTURED_BY=admin@example.com
 
@@ -112,183 +114,351 @@ ONEKHUSA_CAPTURED_BY=admin@example.com
 ONEKHUSA_BASE_URL=https://api.onekhusa.com/sandbox/v1
 ONEKHUSA_CHECKOUT_URL=https://api.onekhusa.com/sandbox/v1/checkout/rtp/initiate
 
-# Webhook Configuration
-PUBLIC_CALLBACK_URL=https://your-ngrok-id.ngrok-free.dev
+# Webhook URL (will update with NGrok)
+PUBLIC_CALLBACK_URL=https://your-ngrok-url.ngrok-free.dev
 
 # Server Configuration
 PORT=3000
 NODE_ENV=development
 ```
 
-⚠️ **Security Alert:** Never commit `.env` to Git. The `.gitignore` file prevents this.
+**⚠️ Security:** Never commit `.env` to Git. Add it to `.gitignore`.
 
 ---
 
-## 🔑 Phase 3: Get Your OneKhusa Credentials
+## 🔑 Step 3: Get Your OneKhusa Credentials
 
-1. Log in to your **OneKhusa Merchant Dashboard** (Sandbox)
+1. **Log in** to OneKhusa Merchant Dashboard (Sandbox mode)
 2. Navigate to **Settings > API Keys**
-3. Copy your:
+3. Copy:
    - `API_KEY`
    - `API_SECRET`
    - `ORG_ID`
-
-4. Paste them into your `.env` file
+4. Paste into your `.env` file
 
 ---
 
-## 🌐 Phase 4: Understanding the Factory Pattern
+## 💡 Step 4: Understanding the Integration Pattern
 
-The factory pattern creates payment operation objects. Here's the OneKhusa API connection code:
+### How OneKhusa Integration Works
 
-### Code Snippet: Connecting to OneKhusa API
+```
+Your Application
+    ↓
+Creates payment operation using Factory
+    ↓
+Calls OneKhusa API (with credentials from .env)
+    ↓
+OneKhusa processes payment
+    ↓
+Sends webhook notification back to your server
+    ↓
+Your app receives webhook and updates database
+```
 
-In `src/factories/paymentFactory.js`, here's how we connect to OneKhusa for each operation:
+### The Factory Pattern in Action
 
 ```javascript
-/**
- * HOSTED CHECKOUT - Connect to OneKhusa
- * Initiates payment collection through OneKhusa's hosted page
- */
-execute: async function(paymentData) {
+// 1. Load credentials from environment
+const config = {
+  apiKey: process.env.ONEKHUSA_API_KEY,
+  apiSecret: process.env.ONEKHUSA_API_SECRET,
+  baseUrl: process.env.ONEKHUSA_BASE_URL
+};
+
+// 2. Create operation using factory
+const checkout = PaymentFactory.createHostedCheckout(config);
+
+// 3. Execute operation
+const result = await checkout.execute({
+  amount: 10000,
+  currency: 'KES',
+  orderId: 'ORD-12345'
+});
+
+// 4. Get redirect URL and send to frontend
+console.log(result.redirectUrl);
+```
+
+---
+
+## 🔌 Step 5: Integrating Payments in Node.js
+
+### Code Snippet: Import and Setup Factory
+
+In your main application file (`src/app.js`):
+
+```javascript
+const express = require('express');
+const PaymentFactory = require('./factories/paymentFactory');
+
+const app = express();
+app.use(express.json());
+
+// Load configuration from .env
+require('dotenv').config();
+
+const config = {
+  apiKey: process.env.ONEKHUSA_API_KEY,
+  apiSecret: process.env.ONEKHUSA_API_SECRET,
+  baseUrl: process.env.ONEKHUSA_BASE_URL
+};
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✓ Server running on port ${PORT}`);
+});
+```
+
+---
+
+### Initiating a Payment (Hosted Checkout)
+
+```javascript
+// In your Express route handler
+app.post('/initiate-payment', async (req, res) => {
   try {
-    // Call OneKhusa API to initiate checkout
-    const response = await fetch(`${this.baseUrl}/checkout/initiate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-        'X-API-Secret': this.apiSecret
-      },
-      body: JSON.stringify({
-        amount: paymentData.amount,
-        currency: paymentData.currency,
-        orderId: paymentData.orderId,
-        callbackUrl: process.env.PUBLIC_CALLBACK_URL
-      })
+    // 1. Create a checkout operation using factory
+    const checkout = PaymentFactory.createHostedCheckout(config);
+
+    // 2. Execute with payment details
+    const result = await checkout.execute({
+      amount: req.body.amount,        // Amount in cents (e.g., 10000 = 100 KES)
+      currency: 'KES',                // Currency code
+      orderId: req.body.orderId       // Your order ID
     });
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`);
+    // 3. Check if successful
+    if (result.status === 'success') {
+      // Send redirect URL to frontend
+      res.json({
+        redirectUrl: result.redirectUrl,
+        transactionId: result.transactionId
+      });
+    } else {
+      res.status(400).json({ error: result.message });
     }
 
-    const data = await response.json();
-    return {
-      status: 'success',
-      redirectUrl: data.checkoutUrl,
-      transactionId: data.transactionId
-    };
   } catch (error) {
-    console.error('Checkout error:', error.message);
-    return { status: 'error', message: error.message };
+    console.error('Payment initiation error:', error);
+    res.status(500).json({ error: 'Payment initiation failed' });
   }
-}
+});
+```
 
-/**
- * SINGLE DISBURSEMENT - Connect to OneKhusa
- * Sends instant payout to a recipient
- */
-execute: async function(recipientData) {
-  try {
-    // Generate idempotency key (prevents duplicate charges if request retries)
-    const idempotencyKey = generateIdempotencyKey();
-
-    // Call OneKhusa API for single payout
-    const response = await fetch(`${config.baseUrl}/disburse/single`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-        'X-API-Secret': this.apiSecret,
-        'X-Idempotency-Key': idempotencyKey
-      },
-      body: JSON.stringify({
-        accountNumber: recipientData.accountNumber,
-        amount: recipientData.amount,
-        narration: recipientData.narration,
-        reference: `DISBURSE-${Date.now()}`
-      })
-    });
-
-    const data = await response.json();
-    return {
-      status: 'success',
-      referenceId: data.referenceId,
-      transactionId: data.transactionId,
-      amount: recipientData.amount
-    };
-  } catch (error) {
-    console.error('Disbursement error:', error.message);
-    return { status: 'error', message: error.message };
-  }
-}
-
-/**
- * BATCH DISBURSEMENT - Connect to OneKhusa
- * Processes bulk payouts from CSV/Excel file
- */
-execute: async function(fileBuffer) {
-  try {
-    // Convert file to Base64 (OneKhusa requirement)
-    const base64File = fileBuffer.toString('base64');
-
-    // Call OneKhusa API for batch processing
-    const response = await fetch(`${config.baseUrl}/disburse/batch`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-        'X-API-Secret': this.apiSecret
-      },
-      body: JSON.stringify({
-        fileData: base64File,
-        fileType: 'csv',
-        description: `Batch Payment - ${new Date().toISOString()}`
-      })
-    });
-
-    const data = await response.json();
-    return {
-      status: 'queued',
-      batchId: data.batchId,
-      totalRecords: data.recordCount
-    };
-  } catch (error) {
-    console.error('Batch error:', error.message);
-    return { status: 'error', message: error.message };
-  }
+**Frontend receives:**
+```json
+{
+  "redirectUrl": "https://api.onekhusa.com/sandbox/checkout?token=...",
+  "transactionId": "TXN-001-2026"
 }
 ```
 
-**Key Points:**
-- ✅ API credentials come from `.env`
-- ✅ All requests use Bearer token authentication
-- ✅ Idempotency keys prevent duplicate charges
-- ✅ Error handling is built-in
-- ✅ Responses include transaction IDs for tracking
+**User Flow:**
+1. Frontend redirects browser to `redirectUrl`
+2. User completes payment on OneKhusa's page
+3. OneKhusa redirects back to your app
+4. Your webhook receives confirmation
 
 ---
 
-## 💻 Phase 5: Start the Server
+### Sending Payouts (Single Disbursement)
 
-### Step 1: Launch the Application
+```javascript
+// Send money to one recipient
+app.post('/send-payout', async (req, res) => {
+  try {
+    // 1. Create disbursement operation
+    const disbursement = PaymentFactory.createSingleDisbursement(config);
+
+    // 2. Execute the payout
+    const result = await disbursement.execute({
+      accountNumber: req.body.accountNumber,  // Mobile money or bank account
+      amount: req.body.amount,                // Amount in cents
+      narration: req.body.description         // Payment description
+    });
+
+    if (result.status === 'success') {
+      res.json({
+        referenceId: result.referenceId,
+        transactionId: result.transactionId,
+        amount: result.amount,
+        status: 'processing'
+      });
+    } else {
+      res.status(400).json({ error: result.message });
+    }
+
+  } catch (error) {
+    console.error('Payout error:', error);
+    res.status(500).json({ error: 'Payout failed' });
+  }
+});
+```
+
+**What Happens:**
+1. Server receives payout request
+2. Calls OneKhusa API with credentials
+3. OneKhusa processes the transaction
+4. Returns reference ID and transaction ID
+5. Later, webhook confirms completion
+
+---
+
+### Processing Batch Payouts
+
+```javascript
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Upload CSV file with multiple payouts
+app.post('/batch-payouts', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file provided' });
+    }
+
+    // 1. Create batch operation
+    const batch = PaymentFactory.createBatchDisbursement(config);
+
+    // 2. Execute with file buffer
+    const result = await batch.execute(req.file.buffer);
+
+    if (result.status === 'queued') {
+      res.json({
+        batchId: result.batchId,
+        recordCount: result.totalRecords,
+        status: 'processing'
+      });
+    } else {
+      res.status(400).json({ error: result.message });
+    }
+
+  } catch (error) {
+    console.error('Batch error:', error);
+    res.status(500).json({ error: 'Batch processing failed' });
+  }
+});
+```
+
+**CSV File Format:**
+```csv
+account_number,amount,narration
+3333888800,100000,Salary Payment
+3333888801,200000,Commission
+3333888802,150000,Bonus
+```
+
+---
+
+## 🌐 Step 6: Receiving Webhooks Locally with NGrok
+
+### What Are Webhooks?
+
+OneKhusa sends webhooks (HTTP POST requests) to notify you when payments complete. To test locally, you need to expose your local machine to the internet using NGrok.
+
+### Setup Webhooks Locally
+
+#### 1. Start Your Node Server
 
 ```bash
 node src/app.js
 ```
 
-**Expected output:**
+**You should see:**
 ```
-✓ Server running on http://localhost:3000
-✓ Webhook URL: https://your-ngrok-id.ngrok-free.dev/webhooks/payments
-✓ Environment: development
+✓ Server running on port 3000
 ```
 
-### Step 2: Verify the Server is Running
-
-Open a new terminal and test:
+#### 2. Start NGrok in Another Terminal
 
 ```bash
+ngrok http 3000
+```
+
+**NGrok shows you:**
+```
+Forwarding    https://abc123xyz.ngrok-free.dev -> http://localhost:3000
+```
+
+**What this means:**
+- Requests to `https://abc123xyz.ngrok-free.dev` are forwarded to your `localhost:3000`
+- OneKhusa can now reach your local server
+
+#### 3. Update Your .env with NGrok URL
+
+```env
+PUBLIC_CALLBACK_URL=https://abc123xyz.ngrok-free.dev
+```
+
+**Restart your Node server** to load the new URL.
+
+#### 4. Register Webhook in OneKhusa Portal
+
+1. Log into OneKhusa Dashboard
+2. Go to **Developers > Webhooks**
+3. Add new endpoint:
+   ```
+   https://abc123xyz.ngrok-free.dev/webhooks/payments
+   ```
+4. Select events: `payment.completed`, `payment.failed`, `disbursement.completed`
+5. Save and test
+
+---
+
+### Handling Webhooks in Your Code
+
+```javascript
+// Webhook endpoint
+app.post('/webhooks/payments', express.raw({ type: 'application/json' }), (req, res) => {
+  try {
+    // Parse webhook payload
+    const webhook = JSON.parse(req.body);
+
+    console.log('[WEBHOOK] Event received:', webhook.event);
+    console.log('[WEBHOOK] Transaction ID:', webhook.transactionId);
+    console.log('[WEBHOOK] Status:', webhook.status);
+
+    // Handle different event types
+    if (webhook.event === 'payment.completed') {
+      console.log('[WEBHOOK] Payment completed for order:', webhook.orderId);
+      // Update your database - mark order as paid
+      // Notify frontend via Socket.io
+      // Send confirmation email
+    } 
+    else if (webhook.event === 'payment.failed') {
+      console.log('[WEBHOOK] Payment failed - reason:', webhook.failureReason);
+      // Update your database - mark order as failed
+      // Notify user
+    }
+    else if (webhook.event === 'disbursement.completed') {
+      console.log('[WEBHOOK] Payout sent to:', webhook.recipient);
+      // Update payout status
+    }
+
+    // Always respond with 200 OK so OneKhusa knows we received it
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error('[WEBHOOK] Error:', error.message);
+    // Still respond with 200 to prevent OneKhusa from retrying
+    res.status(200).json({ success: false });
+  }
+});
+```
+
+---
+
+## 🧪 Step 7: Testing Everything Locally
+
+### Test 1: Verify Server is Running
+
+```bash
+# Terminal 1: Start your server
+node src/app.js
+
+# Terminal 2: Test server is alive
 curl http://localhost:3000/health
 ```
 
@@ -296,365 +466,374 @@ curl http://localhost:3000/health
 ```json
 {
   "status": "ok",
-  "timestamp": "2026-05-13T10:00:00Z",
-  "environment": "development"
+  "timestamp": "2026-05-13T10:00:00Z"
 }
 ```
 
-**If you see errors:**
-- "Port 3000 already in use?" → Run: `PORT=3001 node src/app.js`
-- "Cannot find module?" → Run: `npm install` again
-- "API key is invalid?" → Check your `.env` credentials
-
 ---
 
-## 🌐 Phase 6: Webhook Configuration (Local Testing)
-
-Webhooks allow OneKhusa to send real-time payment notifications to your server.
-
-### Step 1: Start NGrok
-
-In a new terminal (keep Node server running):
+### Test 2: Initiate a Payment
 
 ```bash
-ngrok http 3000
-```
-
-**You'll see:**
-```
-Forwarding    https://abc123xyz.ngrok-free.dev -> http://localhost:3000
-```
-
-### Step 2: Update `.env`
-
-Copy the HTTPS URL from NGrok and update:
-
-```env
-PUBLIC_CALLBACK_URL=https://abc123xyz.ngrok-free.dev
-```
-
-Restart your Node server.
-
-### Step 3: Register Webhook in OneKhusa Portal
-
-1. Log into **OneKhusa Merchant Dashboard**
-2. Go to **Developers > Webhooks**
-3. Add endpoint: `https://abc123xyz.ngrok-free.dev/webhooks/payments`
-4. Select events: `payment.completed`, `payment.failed`, `disbursement.completed`
-5. Save and test
-
----
-
-## 🧪 Phase 7: Testing Each Feature
-
-### Test 1: Health Check
-
-```bash
-curl http://localhost:3000/health
-```
-
-**What this confirms:** Server is running and responding.
-
----
-
-### Test 2: Initiate Payment (Hosted Checkout)
-
-```bash
-curl -X POST http://localhost:3000/api/checkout \
+curl -X POST http://localhost:3000/initiate-payment \
   -H "Content-Type: application/json" \
   -d '{
     "amount": 10000,
-    "currency": "KES",
-    "orderId": "ORD-12345"
+    "orderId": "ORD-TEST-001"
   }'
 ```
+
+**What happens:**
+1. Your server receives request
+2. Creates checkout using factory
+3. Calls OneKhusa API with your credentials
+4. OneKhusa returns checkout URL
+5. You get back redirect URL
 
 **Expected response:**
 ```json
 {
-  "status": "success",
   "redirectUrl": "https://api.onekhusa.com/sandbox/checkout?token=...",
   "transactionId": "TXN-001-2026"
 }
 ```
 
-**Server logs should show:**
+**Check server logs:**
 ```
-[API] Checkout request received
-[CHECKOUT] Initiating hosted checkout for order: ORD-12345
+[API] Processing payment
+[FACTORY] Creating hosted checkout
+[ONEKHUSA] Calling /checkout/initiate
+[RESPONSE] Success - redirecting user
 ```
 
 ---
 
-### Test 3: Send Single Payout
+### Test 3: Send a Payout
 
 ```bash
-curl -X POST http://localhost:3000/api/disburse/single \
+curl -X POST http://localhost:3000/send-payout \
   -H "Content-Type: application/json" \
   -d '{
     "accountNumber": "3333888800",
-    "amount": 100000,
-    "narration": "Test Payout"
+    "amount": 50000,
+    "description": "Test payout"
   }'
 ```
 
+**What happens:**
+1. Server receives payout request
+2. Creates disbursement using factory
+3. Calls OneKhusa API
+4. OneKhusa validates account and amount
+5. Initiates payout
+
 **Expected response:**
 ```json
 {
-  "status": "success",
   "referenceId": "DSB-001-2026",
   "transactionId": "TXN-002-2026",
-  "amount": 100000
+  "amount": 50000,
+  "status": "processing"
 }
 ```
-
-**Server logs should show:**
-```
-[DISBURSE] Processing payout to: 3333888800
-[DISBURSE] Idempotency Key: IDK-1715580000-abc123
-```
-
----
-
-### Test 4: Upload Batch File
-
-Create `payouts.csv`:
-```csv
-account_number,amount,narration
-3333888800,100000,Settlement 1
-3333888801,200000,Settlement 2
-```
-
-Upload:
-```bash
-curl -X POST http://localhost:3000/api/disburse/batch \
-  -F "file=@payouts.csv"
-```
-
-**Expected response:**
-```json
-{
-  "status": "queued",
-  "batchId": "BATCH-001-2026",
-  "totalRecords": 2
-}
-```
-
----
-
-### Test 5: Receive Webhook
-
-1. Complete a test payment (Test 2)
-2. Watch your **server console** for:
-
-```
-[WEBHOOK] Received event: payment.completed
-[WEBHOOK] Payment completed: TXN-001-2026
-[SOCKET] Broadcasting payment-completed to clients
-```
-
-3. Check **NGrok terminal** for HTTP POST request from OneKhusa
-
----
-
-## ✅ Validation Checklist
-
-Before going live, verify:
-
-- [ ] Server starts without errors: `node src/app.js`
-- [ ] Health check responds: `curl http://localhost:3000/health`
-- [ ] Credentials are valid (no API errors)
-- [ ] NGrok is running and forwarding to port 3000
-- [ ] Webhook URL is registered in OneKhusa Portal
-- [ ] Payment checkout redirects correctly
-- [ ] Single payout returns success
-- [ ] Batch file uploads without errors
-- [ ] Webhooks are received on your server
-- [ ] `.env` file is NOT committed to Git
-
----
-
-## 🚀 What Happens Next
-
-After validation:
-
-1. **Move to production** - Switch to live API keys
-2. **Customize the UI** - Edit `public/index.html`
-3. **Add business logic** - Extend the factories for your use case
-4. **Deploy** - Upload to AWS, Heroku, Google Cloud, etc.
-5. **Monitor** - Set up logging and error tracking
-
----
-
-## 🔐 Security Best Practices
-
-### ✅ DO
-
-```javascript
-// Store secrets in .env
-const apiKey = process.env.ONEKHUSA_API_KEY;
-
-// Use idempotency keys
-const idempotencyKey = generateIdempotencyKey();
-
-// Log transactions for compliance
-console.log('[TRANSACTION]', transactionId, amount, status);
-
-// Use HTTPS in production
-https://your-domain.com/webhooks/payments
-```
-
-### ❌ DON'T
-
-```javascript
-// Never hardcode secrets
-const apiKey = "sk_sandbox_abc123";
-
-// Never retry without idempotency key
-// Risk: Customer charged twice
-
-// Never expose API secrets in error messages
-res.json({ error: 'API Secret is invalid' });
-
-// Never use HTTP in production
-http://your-domain.com  // INSECURE
-```
-
----
-
-## 📊 How Payments Flow
-
-```
-Dashboard
-   ↓
-User clicks "Purchase"
-   ↓
-Browser calls /api/checkout
-   ↓
-Server calls PaymentFactory.createHostedCheckout()
-   ↓
-Factory connects to OneKhusa API
-   ↓
-OneKhusa returns checkout URL
-   ↓
-Browser redirects to OneKhusa checkout page
-   ↓
-User completes payment
-   ↓
-OneKhusa processes payment
-   ↓
-OneKhusa sends webhook to /webhooks/payments
-   ↓
-Server receives webhook
-   ↓
-Server broadcasts to browser via Socket.io
-   ↓
-Dashboard updates in real-time
-```
-
----
-
-## 📞 How Webhooks Work
-
-```
-OneKhusa Server
-   ↓
-Payment completes
-   ↓
-OneKhusa sends HTTP POST
-   ↓
-Your Server receives webhook
-   ↓
-Server processes event
-   ↓
-Server broadcasts to connected clients
-   ↓
-Dashboard updates instantly
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Server Won't Start
-
-```
-Error: listen EADDRINUSE :::3000
-```
-
-**Solution:** Port 3000 is in use. Either:
-- Use different port: `PORT=3001 node src/app.js`
-- Kill the process: `lsof -ti:3000 | xargs kill -9`
-
----
-
-### API Returns "Invalid Credentials"
-
-**Check your `.env` file:**
-```bash
-cat .env | grep ONEKHUSA
-```
-
-Verify credentials match your OneKhusa dashboard. Restart the server after changes.
-
----
-
-### NGrok URL Not Working
-
-**Problem:** Webhooks fail with "connection refused"
-
-**Solution:** NGrok URL expires
-```bash
-# Restart NGrok
-ngrok http 3000
-
-# Copy the NEW URL
-# Update PUBLIC_CALLBACK_URL in .env
-# Restart Node server
-```
-
----
-
-### Payments Not Showing in Dashboard
-
-**Check browser console** (Press F12):
-- Look for: `Socket.io connected` or connection errors
-- Check: Is JavaScript loading?
 
 **Check server logs:**
-- Look for: `[SOCKET] Client connected`
-- Look for: `[WEBHOOK]` entries when payment completes
+```
+[API] Processing disbursement
+[FACTORY] Creating single disbursement
+[ONEKHUSA] Calling /disburse/single
+[IDEMPOTENCY] Generated key: IDK-1715580000-abc123
+[RESPONSE] Payout initiated
+```
 
 ---
 
-## 📚 Resources
+### Test 4: Watch for Webhooks
 
-- [OneKhusa API Documentation](https://docs.onekhusa.com)
-- [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
-- [Factory Pattern Explained](https://refactoring.guru/design-patterns/factory-method)
-- [Express.js Guide](https://expressjs.com)
-- [Socket.io Documentation](https://socket.io/docs/)
+#### Terminal Setup
+
+**Terminal 1 - Your Server:**
+```bash
+node src/app.js
+```
+
+**Terminal 2 - NGrok:**
+```bash
+ngrok http 3000
+```
+
+**Terminal 3 - Monitor Logs:**
+```bash
+# Keep watching the output from Terminal 1
+# You'll see webhook events appearing in real-time
+```
+
+#### Simulate a Webhook Test
+
+1. In OneKhusa Portal, find your registered webhook
+2. Click **Test** or **Send Test Event**
+3. Watch your server logs:
+
+```
+[WEBHOOK] Event received: payment.completed
+[WEBHOOK] Transaction ID: TXN-001-2026
+[WEBHOOK] Status: COMPLETED
+[DATABASE] Updated order status to paid
+[EMAIL] Sent confirmation to customer
+```
+
+#### Real Webhook Flow
+
+1. Complete a payment through the checkout flow
+2. Immediately after payment, OneKhusa sends webhook
+3. NGrok terminal shows: `POST /webhooks/payments`
+4. Your server logs show: `[WEBHOOK] Event received`
+5. Database gets updated
+6. Frontend gets notified (if using Socket.io)
+
+---
+
+## 🔍 Understanding What's Happening at Each Step
+
+### Payment Initiation Flow (Detailed)
+
+```
+1. User clicks "Buy Now" on your website
+   ↓
+2. Frontend calls: POST /initiate-payment
+   ↓
+3. Your Node.js server receives request
+   └─ Logs: [API] Processing payment
+   ↓
+4. Server creates checkout object from factory
+   └─ Logs: [FACTORY] Creating hosted checkout
+   ↓
+5. Factory calls OneKhusa API with credentials from .env
+   └─ Logs: [ONEKHUSA] Calling /checkout/initiate
+   ↓
+6. OneKhusa validates credentials and payment details
+   ↓
+7. OneKhusa returns checkout URL
+   └─ Logs: [RESPONSE] Success
+   ↓
+8. Your server sends checkout URL to frontend
+   ↓
+9. Frontend redirects user to OneKhusa payment page
+   ↓
+10. User enters payment details and pays
+    ↓
+11. OneKhusa processes payment
+    ↓
+12. OneKhusa immediately sends webhook to your server
+    └─ NGrok forwards it to: http://localhost:3000/webhooks/payments
+    ↓
+13. Your server receives webhook
+    └─ Logs: [WEBHOOK] Event received: payment.completed
+    ↓
+14. Your server updates database
+    └─ Sets order.status = 'paid'
+    ↓
+15. Your server notifies frontend (optional: Socket.io)
+    ↓
+16. Frontend shows success message to user
+```
+
+---
+
+### What Each Log Entry Means
+
+```bash
+# ✅ Server is properly configured and running
+✓ Server running on port 3000
+
+# ✅ Your Node app received a request from frontend
+[API] Processing payment
+
+# ✅ Factory successfully created a payment object
+[FACTORY] Creating hosted checkout
+
+# ✅ About to call OneKhusa API
+[ONEKHUSA] Calling /checkout/initiate
+
+# ✅ API call succeeded and returned data
+[RESPONSE] Success
+
+# ✅ NGrok received request from OneKhusa
+[NGrok Terminal] POST /webhooks/payments
+
+# ✅ Your server received the webhook
+[WEBHOOK] Event received: payment.completed
+
+# ✅ Database was updated
+[DATABASE] Updated order status to paid
+
+# ⚠️ Something went wrong
+[ERROR] Invalid credentials
+[ERROR] API connection failed
+```
+
+---
+
+## 🔐 Security Checklist
+
+### Before Going Live
+
+- [ ] `.env` is added to `.gitignore`
+- [ ] Never commit `.env` file to Git
+- [ ] Use different credentials for sandbox vs. production
+- [ ] All API keys are in `.env`, not hardcoded
+- [ ] Webhook signature validation is enabled
+- [ ] HTTPS is used for all URLs (in production)
+- [ ] Error messages don't expose API secrets
+
+### Best Practices in Code
+
+```javascript
+// ✅ GOOD - Credentials from environment
+const apiKey = process.env.ONEKHUSA_API_KEY;
+
+// ❌ BAD - Hardcoded credentials
+const apiKey = "sk_sandbox_abc123";
+
+// ✅ GOOD - Validate webhook before processing
+if (!validateWebhookSignature(webhook)) return res.status(401);
+
+// ❌ BAD - Trust webhook without validation
+// Someone could fake a payment completion!
+
+// ✅ GOOD - Log transaction for audit trail
+console.log('[TRANSACTION]', {
+  transactionId: '...',
+  amount: '...',
+  timestamp: '...',
+  status: '...'
+});
+
+// ✅ GOOD - Never expose secrets in error messages
+res.json({ error: 'Payment processing failed' });
+
+// ❌ BAD - Exposes secret
+res.json({ error: 'API Secret is invalid' });
+```
+
+---
+
+## 🐛 Common Issues & Solutions
+
+### Issue: "Cannot find module 'dotenv'"
+
+**Solution:**
+```bash
+npm install dotenv
+```
+
+---
+
+### Issue: "Invalid credentials" errors
+
+**Check:**
+```bash
+# View your .env file (don't push to Git!)
+cat .env
+
+# Verify credentials match OneKhusa dashboard
+# Restart server after changing .env
+```
+
+---
+
+### Issue: "Port 3000 already in use"
+
+**Solution:**
+```bash
+# Use different port
+PORT=3001 node src/app.js
+
+# Or kill the process using port 3000
+lsof -ti:3000 | xargs kill -9
+```
+
+---
+
+### Issue: "NGrok URL not working"
+
+**What happened:** NGrok URL expires (new one each time you restart)
+
+**Solution:**
+```bash
+# 1. Restart NGrok
+ngrok http 3000
+
+# 2. Copy the NEW URL shown
+# 3. Update PUBLIC_CALLBACK_URL in .env
+# 4. Restart Node server
+
+# Before: https://old-url-123.ngrok-free.dev
+# After:  https://new-url-456.ngrok-free.dev
+```
+
+---
+
+### Issue: "Webhook not receiving events"
+
+**Debug:**
+```bash
+# 1. Check NGrok is forwarding
+ngrok http 3000
+# Should show: "Forwarding https://... -> http://localhost:3000"
+
+# 2. Check webhook URL is registered in OneKhusa
+# Login > Developers > Webhooks
+
+# 3. Check server is receiving webhook
+# Look in Terminal 1 for: [WEBHOOK] Event received
+
+# 4. Check NGrok web UI
+# Go to http://localhost:4040
+# Shows all requests received by NGrok
+```
+
+---
+
+## 📚 Project Files to Review
+
+After understanding this guide, review these files in the project:
+
+| File | Purpose |
+|------|---------|
+| `src/factories/paymentFactory.js` | Complete factory implementation |
+| `src/services/onekhusa.service.js` | OneKhusa API integration |
+| `src/services/webhook.service.js` | Webhook handling |
+| `src/app.js` | Express routes and middleware |
+| `public/index.html` | Frontend example |
+| `.env.example` | Template for environment variables |
+
+---
+
+## 📞 Getting Help
+
+- **OneKhusa API Docs:** https://docs.onekhusa.com
+- **Node.js Docs:** https://nodejs.org/docs
+- **NGrok Docs:** https://ngrok.com/docs
+- **Factory Pattern:** https://refactoring.guru/design-patterns/factory-method
 
 ---
 
 ## 📝 License
 
-This project is licensed under the **MIT License** - see the LICENSE file for details.
+MIT License - See LICENSE file for details.
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes
-4. Test thoroughly using the validation checklist
-5. Push and open a Pull Request
+Contributions welcome! Submit pull requests with:
+1. Clear description of changes
+2. Testing completed
+3. Code follows project style
 
 ---
 
 **Last Updated:** May 13, 2026  
-**Version:** 2.2.0  
+**Version:** 3.0.0  
 **Maintainer:** GarryBalala
