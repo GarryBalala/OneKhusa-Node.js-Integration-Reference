@@ -355,67 +355,9 @@ app.post('/webhooks/payments', express.raw({ type: 'application/json' }), (req, 
 ### Test 1: Verify Server is Running
 
 ```bash
-# Terminal 1: Start your server
+# Terminal : Start your server
 node src/app.js
 
-# Terminal 2: Test server is alive
-curl http://localhost:3000/health
-```
-
-**Expected response:**
-```json
-{
-  "status": "ok",
-  "timestamp": "2026-05-15T10:00:00Z"
-}
-```
-
----
-
-### Test 2: Test Hosted Checkout Endpoint
-
-```bash
-# Send payment initiation request
-curl -X POST http://localhost:3000/initiate-payment \
-  -H "Content-Type: application/json" \
-  -d '{
-    "amount": 10000,
-    "orderId": "ORD-12345"
-  }'
-```
-
-**Expected response:**
-```json
-{
-  "redirectUrl": "https://api.onekhusa.com/sandbox/checkout?token=...",
-  "transactionId": "TXN-001-2026"
-}
-```
-
----
-
-### Test 3: Test Disbursement Endpoint
-
-```bash
-# Send payout request
-curl -X POST http://localhost:3000/send-payout \
-  -H "Content-Type: application/json" \
-  -d '{
-    "accountNumber": "254712345678",
-    "amount": 5000,
-    "description": "Test payout"
-  }'
-```
-
-**Expected response:**
-```json
-{
-  "referenceId": "REF-001",
-  "transactionId": "TXN-002-2026",
-  "amount": 5000,
-  "status": "processing"
-}
-```
 
 ---
 
@@ -549,32 +491,3 @@ ngrok http 3000
 - **Express.js Guide:** https://expressjs.com
 
 ---
-
-## 📝 License
-
-MIT License - See LICENSE file for details.
-
----
-
-## 🤝 Contributing
-
-Contributions welcome! Submit pull requests with:
-1. Clear description of changes
-2. Testing completed
-3. Code follows project style
-
----
-
-## 📋 Changelog
-
-### Version 1.0.0 (2026-05-15)
-- Initial release with complete integration guide
-- OneKhusa payment gateway integration
-- Webhook testing with NGrok
-- Comprehensive testing section
-- Common issues troubleshooting guide
-
----
-
-**Last Updated:** 2026-05-15  
-**Maintained by:** [GarryBalala](https://github.com/GarryBalala)
