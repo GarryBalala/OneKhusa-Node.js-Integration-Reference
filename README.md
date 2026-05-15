@@ -1,6 +1,6 @@
 # OneKhusa Node.js Integration Reference
 
-A professional, full-stack reference implementation for the **OneKhusa Payment Gateway** using the **Object Factory Pattern**. This project demonstrates best practices for building secure, maintainable payment processing applications.
+A professional, full-stack reference implementation for the **OneKhusa Payment Gateway** using the **Object Factory Pattern**. This project demonstrates best practices for building secure, maintainable payment processing solutions.
 
 ---
 
@@ -44,8 +44,9 @@ PaymentFactory.create() → Customized payment object with specific behavior
 src/
 ├── services/
 │   ├── onekhusa.service.js         # Hosted checkout logic
-│── disbursement.service.js         # Payout operations
-│
+│   └── disbursement.service.js     # Payout operations
+├── factories/
+│   └── paymentFactory.js           # Factory pattern implementation
 ├── app.js                           # Express server
 ├── config.js                        # Environment setup
 └── utils.js                         # Helper functions
@@ -54,6 +55,7 @@ public/
 └── index.html                       # Dashboard UI
 
 .env                                 # Your secrets (never commit!)
+.gitignore                           # Git ignore rules
 package.json                         # Dependencies
 ```
 
@@ -339,6 +341,9 @@ app.post('/batch-payouts', upload.single('file'), async (req, res) => {
   }
 });
 ```
+
+---
+
 ## 🌐 Step 6: Receiving Webhooks Locally with NGrok
 
 ### What Are Webhooks?
@@ -453,12 +458,58 @@ curl http://localhost:3000/health
 ```json
 {
   "status": "ok",
-  "timestamp": "2026-05-13T10:00:00Z"
+  "timestamp": "2026-05-15T10:00:00Z"
 }
 ```
 
 ---
 
+### Test 2: Test Hosted Checkout Endpoint
+
+```bash
+# Send payment initiation request
+curl -X POST http://localhost:3000/initiate-payment \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 10000,
+    "orderId": "ORD-12345"
+  }'
+```
+
+**Expected response:**
+```json
+{
+  "redirectUrl": "https://api.onekhusa.com/sandbox/checkout?token=...",
+  "transactionId": "TXN-001-2026"
+}
+```
+
+---
+
+### Test 3: Test Disbursement Endpoint
+
+```bash
+# Send payout request
+curl -X POST http://localhost:3000/send-payout \
+  -H "Content-Type: application/json" \
+  -d '{
+    "accountNumber": "254712345678",
+    "amount": 5000,
+    "description": "Test payout"
+  }'
+```
+
+**Expected response:**
+```json
+{
+  "referenceId": "REF-001",
+  "transactionId": "TXN-002-2026",
+  "amount": 5000,
+  "status": "processing"
+}
+```
+
+---
 
 ### Test 4: Watch for Webhooks
 
@@ -480,8 +531,7 @@ ngrok http 3000
 # You'll see webhook events appearing in real-time
 ```
 
-
-
+---
 
 ## 🐛 Common Issues & Solutions
 
@@ -567,6 +617,8 @@ After understanding this guide, review these files in the project:
 | File | Purpose |
 |------|---------|
 | `src/services/onekhusa.service.js` | OneKhusa API integration |
+| `src/services/disbursement.service.js` | Disbursement operations |
+| `src/factories/paymentFactory.js` | Factory pattern implementation |
 | `src/app.js` | Express routes and middleware |
 | `public/index.html` | Frontend example |
 | `.env.example` | Template for environment variables |
@@ -582,3 +634,31 @@ After understanding this guide, review these files in the project:
 
 ---
 
+## 📝 License
+
+MIT License - See LICENSE file for details.
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Submit pull requests with:
+1. Clear description of changes
+2. Testing completed
+3. Code follows project style
+
+---
+
+## 📋 Changelog
+
+### Version 1.0.0 (2026-05-15)
+- Initial release with complete integration guide
+- Object Factory Pattern implementation
+- Webhook testing with NGrok
+- Comprehensive testing section
+- Common issues troubleshooting guide
+
+---
+
+**Last Updated:** 2026-05-15  
+**Maintained by:** [GarryBalala](https://github.com/GarryBalala)
