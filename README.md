@@ -1,6 +1,6 @@
 # OneKhusa Node.js Integration Reference
 
-A professional, full-stack reference implementation for the **OneKhusa Payment Gateway** using the **Object Factory Pattern**. This project demonstrates best practices for building secure, maintainable payment processing solutions.
+A professional, full-stack reference implementation for the **OneKhusa Payment Gateway**. This project demonstrates best practices for building secure, maintainable payment processing solutions.
 
 ---
 
@@ -14,28 +14,6 @@ This repository provides a complete blueprint for integrating OneKhusa payment s
 - **Real-time Webhooks** - Receive payment notifications instantly
 - **Local Testing** - Full webhook testing using NGrok
 
-The architecture uses the **Object Factory Pattern** for clean, maintainable code that's easy to extend and test.
-
----
-
-## 🏗️ Architecture Overview
-
-### Why Object Factory Pattern?
-
-```
-Traditional Approach:
-new Payment(config) → Payment object with fixed behavior
-
-Factory Pattern:
-PaymentFactory.create() → Customized payment object with specific behavior
-```
-
-**Benefits:**
-- ✅ Centralized creation logic - Easy to maintain
-- ✅ Consistent error handling - Same approach everywhere
-- ✅ Easy to test - Each operation independent
-- ✅ Simple to extend - Add new payment types without refactoring
-
 ---
 
 ## 📂 Project Structure
@@ -43,19 +21,16 @@ PaymentFactory.create() → Customized payment object with specific behavior
 ```
 src/
 ├── services/
-│   ├── onekhusa.service.js         # Hosted checkout logic
-│   └── disbursement.service.js     # Payout operations
-├── factories/
-│   └── paymentFactory.js           # Factory pattern implementation
-├── app.js                           # Express server
-├── config.js                        # Environment setup
+│   └── onekhusa.service.js         # OneKhusa API integration
+├── app.js                           # Express server and routes
+├── disbursement.js                 # Disbursement operations
 └── utils.js                         # Helper functions
 
 public/
-└── index.html                       # Dashboard UI
+└── index.html                       # Frontend dashboard UI
 
 .env                                 # Your secrets (never commit!)
-.gitignore                           # Git ignore rules
+.env.example                         # Environment template
 package.json                         # Dependencies
 ```
 
@@ -138,77 +113,25 @@ NODE_ENV=development
 
 ---
 
-## 💡 Step 4: Understanding the Integration Pattern
+## 🔌 Step 4: Integrating Payments in Node.js
 
-### How OneKhusa Integration Works
+### Starting the Server
 
-```
-Your Application
-    ↓
-Creates payment operation using Factory
-    ↓
-Calls OneKhusa API (with credentials from .env)
-    ↓
-OneKhusa processes payment
-    ↓
-Sends webhook notification back to your server
-    ↓
-Your app receives webhook and updates database
+In your terminal:
+
+```bash
+npm start
 ```
 
-### The Factory Pattern in Action
+Or directly:
 
-```javascript
-// 1. Load credentials from environment
-const config = {
-  apiKey: process.env.ONEKHUSA_API_KEY,
-  apiSecret: process.env.ONEKHUSA_API_SECRET,
-  baseUrl: process.env.ONEKHUSA_BASE_URL
-};
-
-// 2. Create operation using factory
-const checkout = PaymentFactory.createHostedCheckout(config);
-
-// 3. Execute operation
-const result = await checkout.execute({
-  amount: 10000,
-  currency: 'KES',
-  orderId: 'ORD-12345'
-});
-
-// 4. Get redirect URL and send to frontend
-console.log(result.redirectUrl);
+```bash
+node src/app.js
 ```
 
----
-
-## 🔌 Step 5: Integrating Payments in Node.js
-
-### Code Snippet: Import and Setup Factory
-
-In your main application file (`src/app.js`):
-
-```javascript
-const express = require('express');
-const PaymentFactory = require('./factories/paymentFactory');
-
-const app = express();
-app.use(express.json());
-
-// Load configuration from .env
-require('dotenv').config();
-
-const config = {
-  apiKey: process.env.ONEKHUSA_API_KEY,
-  apiSecret: process.env.ONEKHUSA_API_SECRET,
-  baseUrl: process.env.ONEKHUSA_BASE_URL
-};
-
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✓ Server running on port ${PORT}`);
-});
+**You should see:**
+```
+✓ Server running on port 3000
 ```
 
 ---
@@ -216,22 +139,17 @@ app.listen(PORT, () => {
 ### Initiating a Payment (Hosted Checkout)
 
 ```javascript
-// In your Express route handler
+// Example from src/app.js
 app.post('/initiate-payment', async (req, res) => {
   try {
-    // 1. Create a checkout operation using factory
-    const checkout = PaymentFactory.createHostedCheckout(config);
-
-    // 2. Execute with payment details
-    const result = await checkout.execute({
+    // Call OneKhusa API with your credentials
+    const result = await onekhusaService.initiateCheckout({
       amount: req.body.amount,        // Amount in cents (e.g., 10000 = 100 KES)
       currency: 'KES',                // Currency code
       orderId: req.body.orderId       // Your order ID
     });
 
-    // 3. Check if successful
     if (result.status === 'success') {
-      // Send redirect URL to frontend
       res.json({
         redirectUrl: result.redirectUrl,
         transactionId: result.transactionId
@@ -266,14 +184,10 @@ app.post('/initiate-payment', async (req, res) => {
 ### Sending Payouts (Single Disbursement)
 
 ```javascript
-// Send money to one recipient
+// Example from src/disbursement.js
 app.post('/send-payout', async (req, res) => {
   try {
-    // 1. Create disbursement operation
-    const disbursement = PaymentFactory.createSingleDisbursement(config);
-
-    // 2. Execute the payout
-    const result = await disbursement.execute({
+    const result = await disbursement.sendSinglePayout({
       accountNumber: req.body.accountNumber,  // Mobile money or bank account
       amount: req.body.amount,                // Amount in cents
       narration: req.body.description         // Payment description
@@ -309,21 +223,17 @@ app.post('/send-payout', async (req, res) => {
 ### Processing Batch Payouts
 
 ```javascript
+// Example from src/app.js
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Upload CSV file with multiple payouts
 app.post('/batch-payouts', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });
     }
 
-    // 1. Create batch operation
-    const batch = PaymentFactory.createBatchDisbursement(config);
-
-    // 2. Execute with file buffer
-    const result = await batch.execute(req.file.buffer);
+    const result = await disbursement.processBatchPayouts(req.file.buffer);
 
     if (result.status === 'queued') {
       res.json({
@@ -344,7 +254,7 @@ app.post('/batch-payouts', upload.single('file'), async (req, res) => {
 
 ---
 
-## 🌐 Step 6: Receiving Webhooks Locally with NGrok
+## 🌐 Step 5: Receiving Webhooks Locally with NGrok
 
 ### What Are Webhooks?
 
@@ -402,10 +312,9 @@ PUBLIC_CALLBACK_URL=https://abc123xyz.ngrok-free.dev
 ### Handling Webhooks in Your Code
 
 ```javascript
-// Webhook endpoint
+// Webhook endpoint in src/app.js
 app.post('/webhooks/payments', express.raw({ type: 'application/json' }), (req, res) => {
   try {
-    // Parse webhook payload
     const webhook = JSON.parse(req.body);
 
     console.log('[WEBHOOK] Event received:', webhook.event);
@@ -434,7 +343,6 @@ app.post('/webhooks/payments', express.raw({ type: 'application/json' }), (req, 
 
   } catch (error) {
     console.error('[WEBHOOK] Error:', error.message);
-    // Still respond with 200 to prevent OneKhusa from retrying
     res.status(200).json({ success: false });
   }
 });
@@ -442,7 +350,7 @@ app.post('/webhooks/payments', express.raw({ type: 'application/json' }), (req, 
 
 ---
 
-## 🧪 Step 7: Testing Everything Locally
+## 🧪 Step 6: Testing Everything Locally
 
 ### Test 1: Verify Server is Running
 
@@ -535,6 +443,15 @@ ngrok http 3000
 
 ## 🐛 Common Issues & Solutions
 
+### Issue: "Cannot find module 'express'"
+
+**Solution:**
+```bash
+npm install express
+```
+
+---
+
 ### Issue: "Cannot find module 'dotenv'"
 
 **Solution:**
@@ -610,18 +527,17 @@ ngrok http 3000
 
 ---
 
-## 📚 Project Files to Review
-
-After understanding this guide, review these files in the project:
+## 📚 Project Files Guide
 
 | File | Purpose |
 |------|---------|
-| `src/services/onekhusa.service.js` | OneKhusa API integration |
-| `src/services/disbursement.service.js` | Disbursement operations |
-| `src/factories/paymentFactory.js` | Factory pattern implementation |
-| `src/app.js` | Express routes and middleware |
-| `public/index.html` | Frontend example |
+| `src/app.js` | Express server, routes, and main entry point |
+| `src/services/onekhusa.service.js` | OneKhusa API integration functions |
+| `src/disbursement.js` | Disbursement and payout operations |
+| `src/utils.js` | Helper utility functions |
+| `public/index.html` | Frontend dashboard UI |
 | `.env.example` | Template for environment variables |
+| `package.json` | Project dependencies and scripts |
 
 ---
 
@@ -630,7 +546,7 @@ After understanding this guide, review these files in the project:
 - **OneKhusa API Docs:** https://docs.onekhusa.com
 - **Node.js Docs:** https://nodejs.org/docs
 - **NGrok Docs:** https://ngrok.com/docs
-- **Factory Pattern:** https://refactoring.guru/design-patterns/factory-method
+- **Express.js Guide:** https://expressjs.com
 
 ---
 
@@ -653,7 +569,7 @@ Contributions welcome! Submit pull requests with:
 
 ### Version 1.0.0 (2026-05-15)
 - Initial release with complete integration guide
-- Object Factory Pattern implementation
+- OneKhusa payment gateway integration
 - Webhook testing with NGrok
 - Comprehensive testing section
 - Common issues troubleshooting guide
