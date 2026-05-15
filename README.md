@@ -596,7 +596,3 @@ Contributions welcome! Submit pull requests with:
 3. Code follows project style
 
 ---
-
-**Last Updated:** May 13, 2026  
-**Version:** 3.0.0  
-**Maintainer:** GarryBalala
