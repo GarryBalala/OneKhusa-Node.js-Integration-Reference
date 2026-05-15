@@ -582,17 +582,3 @@ After understanding this guide, review these files in the project:
 
 ---
 
-## 📝 License
-
-MIT License - See LICENSE file for details.
-
----
-
-## 🤝 Contributing
-
-Contributions welcome! Submit pull requests with:
-1. Clear description of changes
-2. Testing completed
-3. Code follows project style
-
----
